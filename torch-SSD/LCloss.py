@@ -24,9 +24,7 @@ class LCloss(nn.Module):
 
         pos = tar_conf > 0  # B, 8732,
 
-        neg = tar_conf == 0  # B, 8732,
-
-        num_match = torch.sum(pos.type(torch.FloatTensor)).cuda()
+        num_match = torch.sum(pos.type(torch.FloatTensor)).cuda()   # 一个batch里总的正样板的数量
 
         if num_match == 0:
             # 如果没有匹配的loss就为0
@@ -40,33 +38,32 @@ class LCloss(nn.Module):
         tar_loc = tar_loc[pos_mask].view(-1, 4)
 
         loc_loss = F.smooth_l1_loss(pred_loc, tar_loc, size_average=False)
+
+        # 求取样本分类损失
+        conf_loss = F.cross_entropy(input=pred_conf.view(-1, 21),
+                                    target=tar_conf.view(-1),
+                                    reduce=False)  # B * 8732
+
+        conf_loss = conf_loss.view(-1, 8732)  # B, 8732
+
+        conf_loss[pos] = 0
+
+        _, idx = conf_loss.sort(dim=1, descending=True)
+        _, rank = idx.sort(dim=1)
+
+        num_match_box = pos.type(torch.LongTensor).sum(dim=1).cuda()
+        num_neg_box = num_match_box * 3
+
+        neg = rank < num_neg_box.unsqueeze(dim=1).expand_as(rank)  # B, 8732
+
+        conf_loss = F.cross_entropy(input=pred_conf[(neg + pos).unsqueeze(2).expand_as(pred_conf)].view(-1, 21),
+                                    target=tar_conf[(neg + pos)].view(-1),
+                                    size_average=False)
+
+        # loss 求取平均
+        conf_loss /= num_match
         loc_loss /= num_match
 
-        # 求取正样本bbox的分类损失
-        pos_mask = pos.unsqueeze(2).expand_as(pred_conf)
+        # 总的loss由两部分共同组成
+        return conf_loss + loc_loss
 
-        pos_pred_conf = pred_conf[pos_mask].view(-1, 21)
-
-        pos_tar_conf = tar_conf[pos]
-
-        pos_conf_loss = F.cross_entropy(pos_pred_conf, pos_tar_conf)
-
-        # 利用Hard negative mining求取负样本bbox的分类损失，负样本的数量是正样本数量的三倍
-        neg_mask = neg.unsqueeze(2).expand_as(pred_conf)
-        neg_pred_conf = pred_conf[neg_mask].view(-1, 21)
-
-        neg_mask = torch.cat([torch.ones((int(num_match) * 3, 21)).type(torch.ByteTensor),
-                              torch.zeros((neg_pred_conf.size(0) - int(num_match) * 3, 21)).type(torch.ByteTensor)],
-                             dim=0).cuda()
-
-        neg_pred_conf = neg_pred_conf.sort(0, descending=False)[0][neg_mask].view(-1, 21)
-
-        # 背景是第0类，所有标签是0
-        neg_tar_conf = Variable(torch.zeros(neg_pred_conf.size(0)).type(torch.LongTensor).cuda())
-
-        neg_cong_loss = F.cross_entropy(neg_pred_conf, neg_tar_conf)
-
-        # 总的loss由三部分共同构成
-        loss = pos_conf_loss + neg_cong_loss + loc_loss
-
-        return loss
