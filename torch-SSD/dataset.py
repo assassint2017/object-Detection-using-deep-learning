@@ -18,7 +18,7 @@ on_server = False
 img_size = 300  # 规定每一张图片的大小都是300*300
 
 
-class VOC2007(Dataset):
+class VOC(Dataset):
     """
 
     数据预处理只进行了图片缩放和水平随机翻转
@@ -144,12 +144,12 @@ class VOC2007(Dataset):
 
 
 # 定义文件路径
-train_img_dir = '/home/zcy/Desktop/VOC/VOC2007/trainval/JPEGImages/' \
-    if on_server is False else '/home/chaoyiz/VOC/train/JPEGImages/'
+train_img_dir = '/home/zcy/Desktop/dataset/VOC/VOC2007/trainval/JPEGImages/' \
+    if on_server is False else '/home/chaoyiz/VOC/train/'
 train_txt_dir = './txt/train.txt'
 
-test_img_dir = '/home/zcy/Desktop/VOC/VOC2007/test/JPEGImages/' \
-    if on_server is False else '/home/chaoyiz/VOC/test/JPEGImages/'
+test_img_dir = '/home/zcy/Desktop/dataset/VOC/VOC2007/test/JPEGImages/' \
+    if on_server is False else '/home/chaoyiz/VOC/test/'
 
 test_txt_dir = './txt/test.txt'
 
@@ -167,8 +167,8 @@ data_transform = transform.Compose([
 ])
 
 # 定义数据集
-train_ds = VOC2007(train_img_dir, train_txt_dir, data_transform, True)
-test_ds = VOC2007(test_img_dir, test_txt_dir, data_transform, False)
+train_ds = VOC(train_img_dir, train_txt_dir, data_transform, True)
+test_ds = VOC(test_img_dir, test_txt_dir, data_transform, False)
 
 
 # # 测试代码：使用 DataLoader

@@ -193,7 +193,7 @@ class SSD300(nn.Module):
         pred_loc = torch.cat(locs, dim=1)
         pred_conf = torch.cat(confs, dim=1)
 
-        return F.softmax(pred_conf, dim=2), pred_loc
+        return pred_conf, pred_loc
 
 
 def init(module):  # 参数初始化

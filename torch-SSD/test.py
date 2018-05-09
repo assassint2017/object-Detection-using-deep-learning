@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
 import torch
+import torch.nn.functional as F
 
 from dataset import test_ds
 
@@ -14,7 +15,7 @@ import tools
 torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
 test_img_index = 113
-conf_threshold = 0.6
+conf_threshold = 0.2
 nms_threshold = 0.45
 
 test_img, norm_img, label = test_ds.__getitem__(test_img_index)
@@ -25,7 +26,7 @@ width, height = test_img.size
 net = torch.nn.DataParallel(SSD300())
 
 # 加载参数
-net.load_state_dict(torch.load('./net377-5.467.pth'))
+net.load_state_dict(torch.load('./net5-5.378.pth'))
 
 
 # pred_conf: 预测得到的分类概率向量---1, 8732, 21
@@ -35,6 +36,9 @@ pred_conf, pred_loc = net(norm_img)
 
 pred_loc = torch.squeeze(pred_loc)
 pred_conf = torch.squeeze(pred_conf)
+
+# 将pred_conf转换为概率向量
+pred_conf = F.softmax(pred_conf, dim=1)
 
 # 将预测得到的loc变换为真实的loc
 pred_loc[:, 0] *= 0.1
