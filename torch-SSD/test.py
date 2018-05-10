@@ -26,7 +26,7 @@ width, height = test_img.size
 net = torch.nn.DataParallel(SSD300())
 
 # 加载参数
-net.load_state_dict(torch.load('./net5-5.378.pth'))
+net.load_state_dict(torch.load('./net179-0.645.pth'))
 
 
 # pred_conf: 预测得到的分类概率向量---1, 8732, 21
@@ -115,7 +115,7 @@ voc = {
 }
 
 # 绘制GT bbox
-plt.figure('Visualization')
+plt.figure(str(test_img_index))
 plt.subplot(121)
 plt.title('GT-bbox')
 plt.imshow(test_img)

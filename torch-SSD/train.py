@@ -14,7 +14,7 @@ from LCloss import LCloss
 
 
 # 定义超参数
-Epoch = 383
+Epoch = 174
 learning_rate_base = 1e-3
 weight_decay = 5e-4
 momentum = 0.9
@@ -42,7 +42,7 @@ opt = torch.optim.SGD(ssd.parameters(), lr=learning_rate_base,
                       momentum=momentum, weight_decay=weight_decay)
 
 # 学习率衰减
-lr_decay = torch.optim.lr_scheduler.MultiStepLR(opt, [254, 318])
+lr_decay = torch.optim.lr_scheduler.MultiStepLR(opt, [115, 144])
 
 # 实例化一个loss
 lcloss = LCloss()
